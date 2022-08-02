@@ -42,12 +42,10 @@ def getstatuses(twapi, userid, twnumber):
     try:
         items = twapi.GetUserTimeline(user_id=userid, count=200)        # Can't request more than 200 items at a time
     except twitter.TwitterError as e:
-        print(u"[-] ERROR: (" + e[0] + ")")
+        print(f"[-] ERROR: ({e[0]})")
         return(Data(0, 0, 0))
 
-    while len(items) > 0 and totalitems < twnumber:
-        if maxid == items[-1].id:
-            break
+    while len(items) > 0 and totalitems < twnumber and maxid != items[-1].id:
         maxid = items[-1].id
         for item in items:
             if totalitems >= twnumber:
@@ -64,30 +62,28 @@ def getstatuses(twapi, userid, twnumber):
             hours[datetime.strptime(item.created_at, "%a %b %d %H:%M:%S +0000 %Y").hour] += 1
 
             totalitems += 1
-            print("[D] [" + str(totalitems) + "] - "+ str(item.id) + " (" + item.created_at + ") - lang: " + item.lang + " added")
-            # print(item)
+            print(
+                f"[D] [{totalitems}] - {str(item.id)} ({item.created_at}) - lang: {item.lang} added"
+            )
+
+                    # print(item)
 
         try:
             items = twapi.GetUserTimeline(user_id=userid, count=200, max_id=maxid)
         except twitter.TwitterError as e:
-            print(u"[-] ERROR: (" + e[0] + ")")
+            print(f"[-] ERROR: ({e[0]})")
             return(Data(0, 0, 0))
 
-    print("[D] Got " + str(totalitems) + " tweets")
+    print(f"[D] Got {str(totalitems)} tweets")
 
-    print gpscoordinates
-
+    totalitems = 0
     langscountries = []
     langsnumbers = []
-    langsdata = []
-
-    for key in langs.keys():
+    for key, value in langs.items():
         langscountries.append(key)
-        langsnumbers.append(langs[key])
+        langsnumbers.append(value)
 
-    langsdata.append(langscountries)
-    langsdata.append(langsnumbers)
-
+    langsdata = [langscountries, langsnumbers]
     return(Data(gpscoordinates, langsdata, hours))
 
 
